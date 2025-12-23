@@ -1,5 +1,5 @@
 {
-  description = "System dependencies for Rust (OpenSSL)";
+  description = "Rust Multi-platform Build Environment";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -10,34 +10,39 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
+        # 定义 Windows 交叉编译包集
+        winPkgs = pkgs.pkgsCross.mingwW64;
       in
       {
         devShells.default = pkgs.mkShell {
-          # 1. 编译辅助工具
-          # pkg-config 是必须的，它帮助 cargo 找到 openssl 的具体位置
           nativeBuildInputs = with pkgs; [
             pkg-config
+            # 引入 Windows 交叉编译器，它在 Linux 下运行，但生成 Windows 代码
+            winPkgs.stdenv.cc 
           ];
 
-          # 2. 系统依赖库
-          # 这里只放 Rust 项目依赖的 C 库
           buildInputs = with pkgs; [
-            openssl
+            # Linux 原生依赖 (如果以后需要 OpenSSL 等)
+            openssl 
           ];
 
-          # 3. 环境变量配置
-          # 虽然 pkg-config 通常能搞定，但显式设置这些变量能解决大多数 edge case
-          OPENSSL_DIR = "${pkgs.openssl.dev}";
-          OPENSSL_LIB_DIR = "${pkgs.openssl.out}/lib";
-          OPENSSL_INCLUDE_DIR = "${pkgs.openssl.dev}/include";
+          # --- 核心：隔离环境变量 ---
 
-          # 4. 链接库路径
-          # 帮助你的程序在运行时找到 .so 文件
-          LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [ pkgs.openssl ];
+          # 1. 仅针对 Windows 目标的配置（不会影响 Linux 编译）
+          CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER = "x86_64-w64-mingw32-gcc";
+          
+          # 2. 仅针对 Windows 目标的库路径（解决 lpthread 报错）
+          # 注意变量名：CARGO_TARGET_<TARGET>_RUSTFLAGS
+          CARGO_TARGET_X86_64_PC_WINDOWS_GNU_RUSTFLAGS = "-L native=${winPkgs.windows.pthreads}/lib";
+
+          # 3. 如果 Linux 编译也需要特定库，可以单独写
+          # 例如：CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUSTFLAGS = "...";
 
           shellHook = ''
-            echo "🔧 System libraries loaded: OpenSSL"
-            echo "   Rust toolchain: Managed by rustup (External)"
+            ln -snf /home/rxda/.cargo/target_cache ./target
+            echo "🦀 Multi-platform Rust environment loaded!"
+            echo "   - Native Linux: cargo build"
+            echo "   - Cross Windows: cargo build --target x86_64-pc-windows-gnu"
           '';
         };
       }

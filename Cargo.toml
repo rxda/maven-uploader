@@ -5,9 +5,31 @@ edition = "2024"
 
 [dependencies]
 anyhow = "1.0"
-clap = { version = "4.4", features = ["derive"] }
-reqwest = { version = "0.12", features = ["blocking", "json", "rustls-tls", "stream", "multipart"] }
+clap = { version = "4.4", features = ["derive", "env"] }
+reqwest = { version = "0.12", features = ["blocking", "json", "stream", "multipart"] }
 roxmltree = "0.21"
 walkdir = "2.4"
 url = "2.5"
 rayon = "1.8"
+jwalk = "0.8"
+indicatif = "0.18"
+crossbeam-channel = "0.5"
+dashmap = "6.1"
+rusqlite = { version = "0.38", features = ["bundled"] }
+
+[profile.release]
+# 1. 优化级别：'z' 专门优化体积，'s' 兼顾速度和体积
+opt-level = 'z'
+
+# 2. 开启 LTO (Link Time Optimization)
+# 让编译器跨 Crate 进行全局优化，能剔除更多无用代码
+lto = true
+
+# 3. 减少并行编译单元
+# 设为 1 可以增加编译器优化机会，但编译速度会变慢
+codegen-units = 1
+
+
+# 5. 剥离调试符号 (Rust 1.59+)
+# 相当于执行了外部的 strip 命令
+strip = true
