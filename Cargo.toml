@@ -1,0 +1,13 @@
+[package]
+name = "maven-uploader"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0"
+clap = { version = "4.4", features = ["derive"] }
+reqwest = { version = "0.12", features = ["blocking", "json", "rustls-tls", "stream", "multipart"] }
+roxmltree = "0.21"
+walkdir = "2.4"
+url = "2.5"
+rayon = "1.8"
