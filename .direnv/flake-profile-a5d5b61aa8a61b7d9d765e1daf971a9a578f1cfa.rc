@@ -45,7 +45,7 @@ NIX_CC_WRAPPER_TARGET_HOST_x86_64_unknown_linux_gnu='1'
 export NIX_CC_WRAPPER_TARGET_HOST_x86_64_unknown_linux_gnu
 NIX_CC_WRAPPER_TARGET_HOST_x86_64_w64_mingw32='1'
 export NIX_CC_WRAPPER_TARGET_HOST_x86_64_w64_mingw32
-NIX_CFLAGS_COMPILE=' -frandom-seed=sbdv9km5yf -isystem /nix/store/35av63xiansnymzrq4wr8sl9kja4gi13-mcfgthread-x86_64-w64-mingw32-2.2.2-dev/include -isystem /nix/store/35av63xiansnymzrq4wr8sl9kja4gi13-mcfgthread-x86_64-w64-mingw32-2.2.2-dev/include -isystem /nix/store/ydrckgnllgg8nmhdwni81h7xhcpnrlhd-openssl-3.6.0-dev/include -isystem /nix/store/ydrckgnllgg8nmhdwni81h7xhcpnrlhd-openssl-3.6.0-dev/include -isystem /nix/store/35av63xiansnymzrq4wr8sl9kja4gi13-mcfgthread-x86_64-w64-mingw32-2.2.2-dev/include -isystem /nix/store/35av63xiansnymzrq4wr8sl9kja4gi13-mcfgthread-x86_64-w64-mingw32-2.2.2-dev/include -isystem /nix/store/ydrckgnllgg8nmhdwni81h7xhcpnrlhd-openssl-3.6.0-dev/include -isystem /nix/store/ydrckgnllgg8nmhdwni81h7xhcpnrlhd-openssl-3.6.0-dev/include'
+NIX_CFLAGS_COMPILE=' -frandom-seed=pg6l5al526 -isystem /nix/store/35av63xiansnymzrq4wr8sl9kja4gi13-mcfgthread-x86_64-w64-mingw32-2.2.2-dev/include -isystem /nix/store/35av63xiansnymzrq4wr8sl9kja4gi13-mcfgthread-x86_64-w64-mingw32-2.2.2-dev/include -isystem /nix/store/ydrckgnllgg8nmhdwni81h7xhcpnrlhd-openssl-3.6.0-dev/include -isystem /nix/store/ydrckgnllgg8nmhdwni81h7xhcpnrlhd-openssl-3.6.0-dev/include -isystem /nix/store/35av63xiansnymzrq4wr8sl9kja4gi13-mcfgthread-x86_64-w64-mingw32-2.2.2-dev/include -isystem /nix/store/35av63xiansnymzrq4wr8sl9kja4gi13-mcfgthread-x86_64-w64-mingw32-2.2.2-dev/include -isystem /nix/store/ydrckgnllgg8nmhdwni81h7xhcpnrlhd-openssl-3.6.0-dev/include -isystem /nix/store/ydrckgnllgg8nmhdwni81h7xhcpnrlhd-openssl-3.6.0-dev/include'
 export NIX_CFLAGS_COMPILE
 NIX_ENFORCE_NO_NATIVE='1'
 export NIX_ENFORCE_NO_NATIVE
@@ -193,11 +193,7 @@ export propagatedNativeBuildInputs
 declare -a propagatedTargetDepFiles=('propagated-target-target-deps' )
 shell='/nix/store/rlq03x4cwf8zn73hxaxnx0zn5q9kifls-bash-5.3p3/bin/bash'
 export shell
-shellHook='ln -snf /home/rxda/.cargo/target_cache ./target
-echo "🦀 Multi-platform Rust environment loaded!"
-echo "   - Native Linux: cargo build"
-echo "   - Cross Windows: cargo build --target x86_64-pc-windows-gnu"
-'
+shellHook=''
 export shellHook
 stdenv='/nix/store/s3w5m3spa1g71hx0yb82lvk6394j3w5j-stdenv-linux'
 export stdenv

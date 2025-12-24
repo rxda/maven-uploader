@@ -39,10 +39,6 @@
           # 例如：CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUSTFLAGS = "...";
 
           shellHook = ''
-            ln -snf /home/rxda/.cargo/target_cache ./target
-            echo "🦀 Multi-platform Rust environment loaded!"
-            echo "   - Native Linux: cargo build"
-            echo "   - Cross Windows: cargo build --target x86_64-pc-windows-gnu"
           '';
         };
       }
