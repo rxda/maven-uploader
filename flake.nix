@@ -1,44 +1,74 @@
 {
-  description = "Rust Multi-platform Build Environment";
+  description = "Rust Stable: Musl + Windows (Standard GCC Linker)";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    fenix = {
+      url = "github:nix-community/fenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
+  outputs = { self, nixpkgs, fenix, flake-utils, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
-        # 定义 Windows 交叉编译包集
-        winPkgs = pkgs.pkgsCross.mingwW64;
+
+        # 1. 定义 Rust 工具链 (Host + Musl Target + Windows Target)
+        rustToolchain = fenix.packages.${system}.combine [
+          fenix.packages.${system}.stable.toolchain
+          fenix.packages.${system}.targets.x86_64-unknown-linux-musl.stable.rust-std
+          fenix.packages.${system}.targets.x86_64-pc-windows-gnu.stable.rust-std
+        ];
+
+        # 2. 获取标准的 GCC 交叉编译工具链
+        # muslCc: 提供 musl-gcc
+        muslCc = pkgs.pkgsStatic.stdenv.cc;
+        # mingwCc: 提供 x86_64-w64-mingw32-gcc
+        mingwCc = pkgs.pkgsCross.mingwW64.stdenv.cc;
+
       in
       {
         devShells.default = pkgs.mkShell {
-          nativeBuildInputs = with pkgs; [
-            pkg-config
-            # 引入 Windows 交叉编译器，它在 Linux 下运行，但生成 Windows 代码
-            winPkgs.stdenv.cc 
+          name = "rust-std-env";
+
+          # 3. 安装包
+          packages = [
+            rustToolchain
+            pkgs.pkg-config # 处理 C 库依赖
+            
+            # 将交叉编译器放入 PATH，方便 build.rs 或是 cargo 自动发现
+            muslCc
+            mingwCc
           ];
 
-          buildInputs = with pkgs; [
-            # Linux 原生依赖 (如果以后需要 OpenSSL 等)
-            openssl 
-          ];
+          # 4. 环境变量配置 (这是核心)
+          # 告诉 Cargo：当目标是 musl/windows 时，使用哪个 Linker 和 C Compiler。
+          # 这里我们不传任何额外的 RUSTFLAGS，完全使用 GCC 默认行为。
 
-          # --- 核心：隔离环境变量 ---
+          # --- Target: x86_64-unknown-linux-musl ---
+          # C 编译器 (用于 C 依赖)
+          CC_x86_64_unknown_linux_musl = "${muslCc}/bin/${muslCc.targetPrefix}cc";
+          CXX_x86_64_unknown_linux_musl = "${muslCc}/bin/${muslCc.targetPrefix}c++";
+          # Linker (用于最终链接)
+          CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER = "${muslCc}/bin/${muslCc.targetPrefix}cc";
 
-          # 1. 仅针对 Windows 目标的配置（不会影响 Linux 编译）
-          CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER = "x86_64-w64-mingw32-gcc";
-          
-          # 2. 仅针对 Windows 目标的库路径（解决 lpthread 报错）
-          # 注意变量名：CARGO_TARGET_<TARGET>_RUSTFLAGS
-          CARGO_TARGET_X86_64_PC_WINDOWS_GNU_RUSTFLAGS = "-L native=${winPkgs.windows.pthreads}/lib";
-
-          # 3. 如果 Linux 编译也需要特定库，可以单独写
-          # 例如：CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUSTFLAGS = "...";
+          # --- Target: x86_64-pc-windows-gnu ---
+          # C 编译器
+          CC_x86_64_pc_windows_gnu = "${mingwCc}/bin/${mingwCc.targetPrefix}cc";
+          CXX_x86_64_pc_windows_gnu = "${mingwCc}/bin/${mingwCc.targetPrefix}c++";
+          # Linker
+          CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER = "${mingwCc}/bin/${mingwCc.targetPrefix}cc";
 
           shellHook = ''
+            echo "🛡️  Rust Standard Environment (No Mold, No Hacks)"
+            echo "   - Musl Linker:    Default GCC (bfd)"
+            echo "   - Windows Linker: Default MinGW GCC"
+            echo ""
+            echo "Run:"
+            echo "  cargo build --target x86_64-unknown-linux-musl"
+            echo "  cargo build --target x86_64-pc-windows-gnu"
           '';
         };
       }
